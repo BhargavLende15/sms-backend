@@ -1,5 +1,6 @@
 package com.rcoem.sms.intefaces;
 
+import com.rcoem.sms.application.dto.PointsUpdateRequest;
 import com.rcoem.sms.application.dto.StudentDetails;
 import com.rcoem.sms.application.services.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,12 +12,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/students")
+@CrossOrigin(origins = "*")
 public class StudentsController {
     @Autowired
     StudentService studentService;
 
     @PostMapping
-    public ResponseEntity addStudent(@RequestBody StudentDetails studentDetails) {
+    public ResponseEntity<Void> addStudent(@RequestBody StudentDetails studentDetails) {
         StudentDetails insertedStudentDetails=studentService.createStudent(studentDetails);
         return ResponseEntity.created(URI.create("/students/"+insertedStudentDetails.getId())).build();
     }
@@ -32,6 +34,18 @@ public class StudentsController {
           return  ResponseEntity.notFound().build();
         }else{
             return ResponseEntity.ok(studentDetails);
+        }
+    }
+
+    @PutMapping("/{id}/points")
+    public ResponseEntity<?> addPoints(@PathVariable String id, @RequestBody PointsUpdateRequest request){
+        try{
+            StudentDetails updated = studentService.addPoints(id, request.getPoints(), request.getAwardedBy());
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException ex){
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        } catch (RuntimeException ex){
+            return ResponseEntity.status(404).body(ex.getMessage());
         }
     }
 
