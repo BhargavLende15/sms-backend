@@ -38,4 +38,10 @@ public class UserController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<UserDetails> updateUser(@PathVariable String id, @RequestBody UserDetails userDetails) {
+        UserDetails updatedUser = userService.updateUserDetails(id, userDetails);
+        return ResponseEntity.ok(updatedUser);
+    }
+
 }

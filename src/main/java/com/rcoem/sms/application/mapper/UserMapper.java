@@ -1,8 +1,6 @@
 package com.rcoem.sms.application.mapper;
 
-import com.rcoem.sms.application.dto.StudentDetails;
 import com.rcoem.sms.application.dto.UserDetails;
-import com.rcoem.sms.domain.entities.StudentInfo;
 import com.rcoem.sms.domain.entities.UserInfo;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +16,7 @@ public class UserMapper {
                 .type(userInfo.getType())
                 .mobileNumber(userInfo.getMobileNumber())
                 .dateOfBirth(userInfo.getDateOfBirth())
+                .department(userInfo.getDepartment())
                 .build();
     }
     public UserInfo toEntity(UserDetails userInfo) {
@@ -30,6 +29,7 @@ public class UserMapper {
                 .type(userInfo.getType())
                 .mobileNumber(userInfo.getMobileNumber())
                 .dateOfBirth(userInfo.getDateOfBirth())
+                .department(userInfo.getDepartment())
                 .build();
     }
 }
