@@ -10,4 +10,5 @@ public interface StudentService {
     StudentDetails getStudentById(String id);
     StudentDetails updateStudentById(StudentDetails studentDetails);
     void deleteStudentById(StudentDetails studentDetails);
+    StudentDetails addPoints(String studentId, Integer points, String awardedBy);
 }

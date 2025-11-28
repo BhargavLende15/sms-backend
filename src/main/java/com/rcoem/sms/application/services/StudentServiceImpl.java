@@ -51,4 +51,20 @@ public class StudentServiceImpl implements StudentService{
     public void deleteStudentById(StudentDetails studentDetails) {
        studentRepository.delete(studentMapper.toEntity(studentDetails));
     }
+
+    @Override
+    public StudentDetails addPoints(String studentId, Integer points, String awardedBy) {
+        if(studentId == null || studentId.trim().isEmpty()){
+            throw new IllegalArgumentException("studentId is required");
+        }
+        if(points == null || points <=0){
+            throw new IllegalArgumentException("Points should be greater than zero");
+        }
+        StudentInfo studentInfo = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+        int updatedPoints = (studentInfo.getPoints() == null ? 0 : studentInfo.getPoints()) + points;
+        studentInfo.setPoints(updatedPoints);
+        StudentInfo saved = studentRepository.save(studentInfo);
+        return studentMapper.toDto(saved);
+    }
 }
