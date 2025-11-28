@@ -19,6 +19,7 @@ public class UserInfo {
     @NonNull
     @Column(unique = true)
     String email;
+    @Column(unique = true)
     String mobileNumber;
     @NonNull
     String password;

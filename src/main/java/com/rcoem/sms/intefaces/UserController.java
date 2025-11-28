@@ -2,6 +2,7 @@ package com.rcoem.sms.intefaces;
 
 import com.rcoem.sms.application.dto.LoginRequest;
 import com.rcoem.sms.application.dto.UserDetails;
+import com.rcoem.sms.application.exceptions.DuplicateResourceException;
 import com.rcoem.sms.application.exceptions.InvalidCredentialsException;
 import com.rcoem.sms.application.exceptions.UserNotFoundException;
 import com.rcoem.sms.application.services.UserService;
@@ -20,10 +21,16 @@ public class UserController {
     UserService userService;
 
     @PostMapping
-    public ResponseEntity<UserDetails> addUser(@RequestBody UserDetails userDetails) {
-        UserDetails insertedStudentDetails=userService.registerUser(userDetails);
-        return ResponseEntity.created(URI.create("/users/"+insertedStudentDetails.getId()))
-                .body(insertedStudentDetails);
+    public ResponseEntity<?> addUser(@RequestBody UserDetails userDetails) {
+        try {
+            UserDetails insertedStudentDetails=userService.registerUser(userDetails);
+            return ResponseEntity.created(URI.create("/users/"+insertedStudentDetails.getId()))
+                    .body(insertedStudentDetails);
+        } catch (DuplicateResourceException ex){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+        } catch (IllegalArgumentException ex){
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 
     @PostMapping("/sign-in")
@@ -39,9 +46,17 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDetails> updateUser(@PathVariable String id, @RequestBody UserDetails userDetails) {
-        UserDetails updatedUser = userService.updateUserDetails(id, userDetails);
-        return ResponseEntity.ok(updatedUser);
+    public ResponseEntity<?> updateUser(@PathVariable String id, @RequestBody UserDetails userDetails) {
+        try{
+            UserDetails updatedUser = userService.updateUserDetails(id, userDetails);
+            return ResponseEntity.ok(updatedUser);
+        } catch (DuplicateResourceException ex){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+        } catch (IllegalArgumentException ex){
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        } catch (UserNotFoundException ex){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
     }
 
 }
