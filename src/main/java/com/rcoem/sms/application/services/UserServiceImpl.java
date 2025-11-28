@@ -2,6 +2,7 @@ package com.rcoem.sms.application.services;
 
 import com.rcoem.sms.application.dto.StudentDetails;
 import com.rcoem.sms.application.dto.UserDetails;
+import com.rcoem.sms.application.exceptions.DuplicateResourceException;
 import com.rcoem.sms.application.exceptions.InvalidCredentialsException;
 import com.rcoem.sms.application.exceptions.UserNotFoundException;
 import com.rcoem.sms.application.mapper.UserMapper;
@@ -12,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import static java.util.Objects.nonNull;
 
@@ -29,9 +31,14 @@ public class UserServiceImpl implements UserService{
     @Autowired
     PasswordEncoder passwordEncoder;
 
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final Pattern MOBILE_PATTERN = Pattern.compile("^[0-9]{10}$");
+
 
     @Override
     public UserDetails registerUser(UserDetails userDetails) {
+        validateUserInput(userDetails);
+        ensureUniqueConstraints(userDetails);
         String uid = "USER" + UUID.randomUUID();
         userDetails.setId(uid);
         if(userDetails.getType()==null || userDetails.getType().isBlank()){
@@ -85,9 +92,17 @@ public class UserServiceImpl implements UserService{
             userInfo.setName(userDetails.getName());
         }
         if(nonNull(userDetails.getEmail())){
+            validateEmail(userDetails.getEmail());
+            userRepository.findByEmail(userDetails.getEmail())
+                    .filter(existing -> !existing.getId().equals(userId))
+                    .ifPresent(existing -> { throw new DuplicateResourceException("Email already registered");});
             userInfo.setEmail(userDetails.getEmail());
         }
         if(nonNull(userDetails.getMobileNumber())){
+            validateMobile(userDetails.getMobileNumber());
+            userRepository.findByMobileNumber(userDetails.getMobileNumber())
+                    .filter(existing -> !existing.getId().equals(userId))
+                    .ifPresent(existing -> { throw new DuplicateResourceException("Mobile number already registered");});
             userInfo.setMobileNumber(userDetails.getMobileNumber());
         }
         if(nonNull(userDetails.getGender())){
@@ -104,5 +119,31 @@ public class UserServiceImpl implements UserService{
         UserDetails response=userMapper.toDto(saved);
         response.setPassword(null);
         return response;
+    }
+
+    private void validateUserInput(UserDetails userDetails){
+        validateEmail(userDetails.getEmail());
+        validateMobile(userDetails.getMobileNumber());
+    }
+
+    private void validateEmail(String email){
+        if(!EMAIL_PATTERN.matcher(email).matches()){
+            throw new IllegalArgumentException("Invalid email format");
+        }
+    }
+
+    private void validateMobile(String mobileNumber){
+        if(nonNull(mobileNumber) && !MOBILE_PATTERN.matcher(mobileNumber).matches()){
+            throw new IllegalArgumentException("Invalid mobile number");
+        }
+    }
+
+    private void ensureUniqueConstraints(UserDetails userDetails){
+        userRepository.findByEmail(userDetails.getEmail())
+                .ifPresent(existing -> { throw new DuplicateResourceException("Email already registered");});
+        if(nonNull(userDetails.getMobileNumber())){
+            userRepository.findByMobileNumber(userDetails.getMobileNumber())
+                    .ifPresent(existing -> { throw new DuplicateResourceException("Mobile number already registered");});
+        }
     }
 }
