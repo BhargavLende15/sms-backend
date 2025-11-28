@@ -16,4 +16,5 @@ public class UserDetails {
     String password;
     String gender;
     String dateOfBirth;
+    String department;
 }

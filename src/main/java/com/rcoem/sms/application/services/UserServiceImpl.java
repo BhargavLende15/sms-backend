@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static java.util.Objects.nonNull;
@@ -77,5 +75,34 @@ public class UserServiceImpl implements UserService{
     @Override
     public void updateUserType(UserDetails userDetails) {
 
+    }
+
+    @Override
+    public UserDetails updateUserDetails(String userId, UserDetails userDetails) {
+        UserInfo userInfo = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + userId));
+        if(nonNull(userDetails.getName())){
+            userInfo.setName(userDetails.getName());
+        }
+        if(nonNull(userDetails.getEmail())){
+            userInfo.setEmail(userDetails.getEmail());
+        }
+        if(nonNull(userDetails.getMobileNumber())){
+            userInfo.setMobileNumber(userDetails.getMobileNumber());
+        }
+        if(nonNull(userDetails.getGender())){
+            userInfo.setGender(userDetails.getGender());
+        }
+        if(nonNull(userDetails.getDateOfBirth())){
+            userInfo.setDateOfBirth(userDetails.getDateOfBirth());
+        }
+        if(nonNull(userDetails.getDepartment())){
+            userInfo.setDepartment(userDetails.getDepartment());
+        }
+
+        UserInfo saved=userRepository.save(userInfo);
+        UserDetails response=userMapper.toDto(saved);
+        response.setPassword(null);
+        return response;
     }
 }

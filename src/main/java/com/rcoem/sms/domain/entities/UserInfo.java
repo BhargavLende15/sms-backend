@@ -24,4 +24,5 @@ public class UserInfo {
     String password;
     String gender;
     String dateOfBirth;
+    String department;
 }
