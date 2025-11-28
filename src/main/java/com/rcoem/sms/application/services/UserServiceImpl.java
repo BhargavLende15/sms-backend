@@ -4,13 +4,11 @@ import com.rcoem.sms.application.dto.StudentDetails;
 import com.rcoem.sms.application.dto.UserDetails;
 import com.rcoem.sms.application.exceptions.InvalidCredentialsException;
 import com.rcoem.sms.application.exceptions.UserNotFoundException;
-import com.rcoem.sms.application.mapper.StudentMapper;
 import com.rcoem.sms.application.mapper.UserMapper;
-import com.rcoem.sms.domain.entities.StudentInfo;
 import com.rcoem.sms.domain.entities.UserInfo;
-import com.rcoem.sms.domain.repositories.StudentRepository;
 import com.rcoem.sms.domain.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,8 +25,11 @@ public class UserServiceImpl implements UserService{
     @Autowired
     UserMapper userMapper;
 
-@Autowired
-StudentService studentService;
+    @Autowired
+    StudentService studentService;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
 
     @Override
@@ -38,7 +39,9 @@ StudentService studentService;
         if(userDetails.getType()==null || userDetails.getType().isBlank()){
             userDetails.setType("student");
         }
+        userDetails.setPassword(passwordEncoder.encode(userDetails.getPassword()));
         UserDetails userDetails1= userMapper.toDto(userRepository.save(userMapper.toEntity(userDetails)));
+        userDetails1.setPassword(null);
         if(userDetails.getType().equalsIgnoreCase("student")) {
             studentService.createStudent(StudentDetails.builder()
                     .id(userDetails.getId())
@@ -56,8 +59,10 @@ StudentService studentService;
         UserInfo userDetails=userRepository.findByEmail(email)
                 .orElseThrow(()-> new UserNotFoundException("User not found with email "+email));
         if(nonNull(userDetails)){
-            if(userDetails.getPassword().equals(password)){
-                return userMapper.toDto(userDetails);
+            if(passwordEncoder.matches(password,userDetails.getPassword())){
+                UserDetails response = userMapper.toDto(userDetails);
+                response.setPassword(null);
+                return response;
             }
             throw new InvalidCredentialsException("Invalid credentials");
         }
