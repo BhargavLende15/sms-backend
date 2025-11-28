@@ -6,7 +6,11 @@ import com.rcoem.sms.application.exceptions.DuplicateResourceException;
 import com.rcoem.sms.application.exceptions.InvalidCredentialsException;
 import com.rcoem.sms.application.exceptions.UserNotFoundException;
 import com.rcoem.sms.application.mapper.UserMapper;
+import com.rcoem.sms.domain.entities.AdminInfo;
+import com.rcoem.sms.domain.entities.TeacherInfo;
 import com.rcoem.sms.domain.entities.UserInfo;
+import com.rcoem.sms.domain.repositories.AdminRepository;
+import com.rcoem.sms.domain.repositories.TeacherRepository;
 import com.rcoem.sms.domain.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,6 +35,12 @@ public class UserServiceImpl implements UserService{
     @Autowired
     PasswordEncoder passwordEncoder;
 
+    @Autowired
+    TeacherRepository teacherRepository;
+
+    @Autowired
+    AdminRepository adminRepository;
+
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     private static final Pattern MOBILE_PATTERN = Pattern.compile("^[0-9]{10}$");
 
@@ -45,18 +55,41 @@ public class UserServiceImpl implements UserService{
             userDetails.setType("student");
         }
         userDetails.setPassword(passwordEncoder.encode(userDetails.getPassword()));
-        UserDetails userDetails1= userMapper.toDto(userRepository.save(userMapper.toEntity(userDetails)));
-        userDetails1.setPassword(null);
+        UserDetails savedUser = userMapper.toDto(userRepository.save(userMapper.toEntity(userDetails)));
+        savedUser.setPassword(null);
         if(userDetails.getType().equalsIgnoreCase("student")) {
             studentService.createStudent(StudentDetails.builder()
                     .id(userDetails.getId())
                     .name(userDetails.getName())
                     .email(userDetails.getEmail())
                     .gender(userDetails.getGender())
+                    .mobileNumber(userDetails.getMobileNumber())
+                    .department(userDetails.getDepartment())
+                    .dateOfBirth(userDetails.getDateOfBirth())
                     .points(0)
                     .build());
+        } else if (userDetails.getType().equalsIgnoreCase("teacher")) {
+            teacherRepository.save(TeacherInfo.builder()
+                    .id(userDetails.getId())
+                    .name(userDetails.getName())
+                    .email(userDetails.getEmail())
+                    .mobileNumber(userDetails.getMobileNumber())
+                    .department(userDetails.getDepartment())
+                    .gender(userDetails.getGender())
+                    .dateOfBirth(userDetails.getDateOfBirth())
+                    .build());
+        } else if (userDetails.getType().equalsIgnoreCase("admin")) {
+            adminRepository.save(AdminInfo.builder()
+                    .id(userDetails.getId())
+                    .name(userDetails.getName())
+                    .email(userDetails.getEmail())
+                    .mobileNumber(userDetails.getMobileNumber())
+                    .department(userDetails.getDepartment())
+                    .gender(userDetails.getGender())
+                    .dateOfBirth(userDetails.getDateOfBirth())
+                    .build());
         }
-        return userDetails1;
+        return savedUser;
     }
 
     @Override

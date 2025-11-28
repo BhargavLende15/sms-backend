@@ -3,7 +3,9 @@ package com.rcoem.sms.application.services;
 import com.rcoem.sms.application.dto.StudentDetails;
 import com.rcoem.sms.application.mapper.StudentMapper;
 import com.rcoem.sms.domain.entities.StudentInfo;
+import com.rcoem.sms.domain.entities.UserInfo;
 import com.rcoem.sms.domain.repositories.StudentRepository;
+import com.rcoem.sms.domain.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,9 @@ public class StudentServiceImpl implements StudentService{
     @Autowired
     StudentMapper studentMapper;
 
+    @Autowired
+    UserRepository userRepository;
+
     @Override
     public List<StudentDetails> getAllStudents() {
         return studentRepository.findAll()
@@ -29,8 +34,10 @@ public class StudentServiceImpl implements StudentService{
 
     @Override
     public StudentDetails createStudent(StudentDetails studentDetails) {
-        String uid = "RCOEM" + UUID.randomUUID();
-        studentDetails.setId(uid);
+        if(studentDetails.getId() == null || studentDetails.getId().isBlank()){
+            String uid = "RCOEM" + UUID.randomUUID();
+            studentDetails.setId(uid);
+        }
         StudentInfo insertedRecord = studentRepository.save(studentMapper.toEntity(studentDetails));
         return studentMapper.toDto(insertedRecord);
     }
@@ -59,6 +66,14 @@ public class StudentServiceImpl implements StudentService{
         }
         if(points == null || points <=0){
             throw new IllegalArgumentException("Points should be greater than zero");
+        }
+        if(awardedBy == null || awardedBy.trim().isEmpty()){
+            throw new IllegalArgumentException("awardedBy (teacher id) is required");
+        }
+        UserInfo awardingUser = userRepository.findById(awardedBy)
+                .orElseThrow(() -> new RuntimeException("Awarding user not found"));
+        if (!"teacher".equalsIgnoreCase(awardingUser.getType())) {
+            throw new RuntimeException("Only teachers can add points");
         }
         StudentInfo studentInfo = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));

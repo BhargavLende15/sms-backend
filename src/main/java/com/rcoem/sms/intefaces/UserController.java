@@ -36,7 +36,8 @@ public class UserController {
     @PostMapping("/sign-in")
     public ResponseEntity<?> signInUser(@RequestBody LoginRequest loginRequest) {
         try {
-            UserDetails studentDetails= userService.signInUser(loginRequest.getEmail(),loginRequest.getPassword());
+            UserDetails studentDetails= userService.signInUser(
+                    loginRequest.getEmail(),loginRequest.getPassword());
             return ResponseEntity.ok(studentDetails);
         } catch (UserNotFoundException ex){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
