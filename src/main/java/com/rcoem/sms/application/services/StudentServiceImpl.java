@@ -34,8 +34,10 @@ public class StudentServiceImpl implements StudentService{
 
     @Override
     public StudentDetails createStudent(StudentDetails studentDetails) {
-        String uid = "RCOEM" + UUID.randomUUID();
-        studentDetails.setId(uid);
+        if(studentDetails.getId() == null || studentDetails.getId().isBlank()){
+            String uid = "RCOEM" + UUID.randomUUID();
+            studentDetails.setId(uid);
+        }
         StudentInfo insertedRecord = studentRepository.save(studentMapper.toEntity(studentDetails));
         return studentMapper.toDto(insertedRecord);
     }

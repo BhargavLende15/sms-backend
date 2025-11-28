@@ -63,6 +63,9 @@ public class UserServiceImpl implements UserService{
                     .name(userDetails.getName())
                     .email(userDetails.getEmail())
                     .gender(userDetails.getGender())
+                    .mobileNumber(userDetails.getMobileNumber())
+                    .department(userDetails.getDepartment())
+                    .dateOfBirth(userDetails.getDateOfBirth())
                     .points(0)
                     .build());
         } else if (userDetails.getType().equalsIgnoreCase("teacher")) {
