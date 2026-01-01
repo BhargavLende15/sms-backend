@@ -1,11 +1,13 @@
 package com.rcoem.sms.application.services;
 
 import com.rcoem.sms.application.dto.CourseDetails;
+import com.rcoem.sms.application.dto.EnrollmentDetails;
 import com.rcoem.sms.application.exceptions.DuplicateResourceException;
 import com.rcoem.sms.application.exceptions.UserNotFoundException;
 import com.rcoem.sms.application.mapper.CourseMapper;
 import com.rcoem.sms.domain.entities.CourseEnrollmentInfo;
 import com.rcoem.sms.domain.entities.CourseInfo;
+import com.rcoem.sms.domain.entities.StudentInfo;
 import com.rcoem.sms.domain.repositories.CourseEnrollmentRepository;
 import com.rcoem.sms.domain.repositories.CourseRepository;
 import com.rcoem.sms.domain.repositories.StudentRepository;
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CourseServiceImpl implements CourseService {
@@ -89,6 +92,46 @@ public class CourseServiceImpl implements CourseService {
                 .enrolledAt(LocalDateTime.now())
                 .build();
         courseEnrollmentRepository.save(enrollmentInfo);
+    }
+
+    @Override
+    public List<EnrollmentDetails> getEnrollmentsForCourse(String courseId) {
+        if(isBlank(courseId)){
+            throw new IllegalArgumentException("CourseId is required");
+        }
+        // Verify course exists
+        courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found"));
+        
+        List<CourseEnrollmentInfo> enrollments = courseEnrollmentRepository.findAllByCourseId(courseId);
+        
+        return enrollments.stream()
+                .map(enrollment -> {
+                    StudentInfo student = studentRepository.findById(enrollment.getStudentId())
+                            .orElse(null);
+                    if(student == null){
+                        // Student not found, return minimal info
+                        return EnrollmentDetails.builder()
+                                .enrollmentId(enrollment.getId())
+                                .studentId(enrollment.getStudentId())
+                                .studentName("Unknown")
+                                .studentEmail("N/A")
+                                .department("N/A")
+                                .status(enrollment.getStatus())
+                                .enrolledAt(enrollment.getEnrolledAt())
+                                .build();
+                    }
+                    return EnrollmentDetails.builder()
+                            .enrollmentId(enrollment.getId())
+                            .studentId(student.getId())
+                            .studentName(student.getName())
+                            .studentEmail(student.getEmail())
+                            .department(student.getDepartment())
+                            .status(enrollment.getStatus())
+                            .enrolledAt(enrollment.getEnrolledAt())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 
     private void validateCourseDetails(CourseDetails courseDetails){

@@ -1,6 +1,7 @@
 package com.rcoem.sms.intefaces;
 
 import com.rcoem.sms.application.dto.CourseDetails;
+import com.rcoem.sms.application.dto.EnrollmentDetails;
 import com.rcoem.sms.application.dto.EnrollmentRequest;
 import com.rcoem.sms.application.exceptions.DuplicateResourceException;
 import com.rcoem.sms.application.exceptions.UserNotFoundException;
@@ -51,6 +52,16 @@ public class CourseController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
         } catch (UserNotFoundException ex){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (IllegalArgumentException ex){
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("/{courseId}/enrollments")
+    public ResponseEntity<?> getEnrollmentsForCourse(@PathVariable String courseId){
+        try{
+            List<EnrollmentDetails> enrollments = courseService.getEnrollmentsForCourse(courseId);
+            return ResponseEntity.ok(enrollments);
         } catch (IllegalArgumentException ex){
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
